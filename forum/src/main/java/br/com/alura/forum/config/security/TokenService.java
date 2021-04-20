@@ -1,6 +1,7 @@
 package br.com.alura.forum.config.security;
 
 import br.com.alura.forum.modelo.Usuario;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,12 +24,6 @@ public class TokenService {
     public String gerarToken(Authentication authentication) {
         Usuario logado = (Usuario) authentication.getPrincipal();
         Date hoje = new Date();
-        System.out.println("DATA ATUAL:"+ hoje);
-        System.out.println("DATA TIME HOJE"+hoje.getTime());
-        System.out.println("DATA TIME amanhã"+(hoje.getTime()+expiration));
-        System.out.println("DATA TIME amanhã"+new Date(hoje.getTime() + expiration));
-        LocalDateTime dataHoje=LocalDateTime.now();
-        System.out.println("CACETE:"+dataHoje);
         //LocalDateTime amanha= new LocalDateTime();
 
         Date dataExpiracao = new Date(hoje.getTime() + expiration);
@@ -40,5 +35,20 @@ public class TokenService {
                 .setExpiration(dataExpiracao)
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
+    }
+
+    public boolean isTokeanValido(String token) {
+        try {
+            Jwts.parser().setSigningKey(this.secret).parseClaimsJws(token);
+            return true;
+        }
+        catch (Exception e){
+            return false;
+        }
+    }
+
+    public Long getIdUsuario(String token) {
+        Claims claims=Jwts.parser().setSigningKey(this.secret).parseClaimsJws(token).getBody();
+        return Long.parseLong(claims.getSubject());
     }
 }
